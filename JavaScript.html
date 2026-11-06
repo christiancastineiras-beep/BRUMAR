@@ -1,0 +1,133 @@
+<script>
+  (() => {
+    'use strict';
+
+    const main = document.getElementById('contenido');
+    const navigation = document.getElementById('navigation');
+    const connection = document.getElementById('connection');
+    let application;
+
+    function element(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function button(text, onClick, className = 'text-button') {
+      const node = element('button', className, text);
+      node.type = 'button';
+      node.addEventListener('click', onClick);
+      return node;
+    }
+
+    function navigate(id, focus = true) {
+      const module = application.modules.find(item => item.id === id);
+      if (id !== 'inicio' && !module) return;
+      for (const item of navigation.children) {
+        if (item.dataset.module === id) item.setAttribute('aria-current', 'page');
+        else item.removeAttribute('aria-current');
+      }
+
+      const title = module ? module.title : 'Un solo lugar para gestionar BRUMAR';
+      main.replaceChildren(
+        element('p', 'eyebrow', module ? 'BRUMAR / MÓDULOS' : 'BRUMAR / INICIO'),
+        element('h1', '', title),
+        element('p', 'intro', module ? module.description : 'Pedidos, clientes, mercadería y resultados conectados con la actividad de tu comercio.')
+      );
+
+      if (module) renderModule(module);
+      else renderHome();
+      document.title = 'BRUMAR · ' + (module ? module.title : 'Gestión integral');
+      if (focus) main.focus();
+    }
+
+    function renderHome() {
+      const notice = element('section', 'notice');
+      notice.append(
+        element('h2', '', 'Estamos construyendo la base del sistema'),
+        element('p', '', 'Esta primera versión permite recorrer los módulos previstos. Las operaciones se incorporarán a partir de los procesos de BRUMAR; todavía no se registran pedidos, movimientos ni resultados.')
+      );
+      const grid = element('div', 'module-grid');
+      for (const module of application.modules) {
+        const card = element('article', 'module-card');
+        card.append(
+          element('span', 'badge', 'POR DEFINIR'),
+          element('h3', '', module.title),
+          element('p', '', module.description),
+          button('Ver alcance →', () => navigate(module.id))
+        );
+        grid.append(card);
+      }
+      main.append(notice, element('h2', 'section-title', 'Módulos previstos'), grid);
+    }
+
+    function renderModule(module) {
+      const detail = element('section', 'detail');
+      detail.append(
+        element('h2', '', 'Próximo paso: definir el proceso'),
+        element('p', '', module.pending),
+        element('p', '', 'Luego incorporaremos los formularios, las validaciones y las funciones necesarias para operar este módulo.'),
+        button('← Volver al inicio', () => navigate('inicio'))
+      );
+      main.append(detail);
+    }
+
+    function renderApplication(data, isPreview) {
+      if (!data || !Array.isArray(data.modules) || !data.version) {
+        renderError(new Error('El servidor no devolvió la configuración esperada.'));
+        return;
+      }
+      application = data;
+      navigation.replaceChildren();
+      const pages = [{ id: 'inicio', title: 'Inicio' }, ...data.modules];
+      pages.forEach((page, index) => {
+        const item = button('', () => navigate(page.id), 'nav-button');
+        item.dataset.module = page.id;
+        item.append(element('span', 'nav-number', String(index).padStart(2, '0')), element('span', '', page.title));
+        navigation.append(item);
+      });
+      document.getElementById('version').textContent = 'v' + data.version + ' · ' + data.stage;
+      connection.classList.remove('error');
+      connection.textContent = isPreview ? 'Vista local · sin conexión a Google' : 'Conectado a Apps Script';
+      main.setAttribute('aria-busy', 'false');
+      navigate('inicio', false);
+    }
+
+    function renderError(error) {
+      connection.textContent = 'No se pudo conectar';
+      connection.classList.add('error');
+      main.setAttribute('aria-busy', 'false');
+      main.replaceChildren(
+        element('p', 'eyebrow', 'BRUMAR / CONEXIÓN'),
+        element('h1', '', 'No pudimos cargar el sistema'),
+        element('p', 'intro', error && error.message ? error.message : 'Revisá la conexión y volvé a intentar.'),
+        button('Reintentar', loadApplication)
+      );
+    }
+
+    function loadApplication() {
+      connection.textContent = 'Conectando…';
+      connection.classList.remove('error');
+      main.setAttribute('aria-busy', 'true');
+      if (window.BRUMAR_LOCAL_BOOTSTRAP) {
+        renderApplication(window.BRUMAR_LOCAL_BOOTSTRAP, true);
+        return;
+      }
+      if (!(window.google && window.google.script && window.google.script.run)) {
+        renderError(new Error('Abrí la aplicación desde Google Apps Script o generá la vista local siguiendo el README.'));
+        return;
+      }
+      try {
+        window.google.script.run
+          .withSuccessHandler(data => renderApplication(data, false))
+          .withFailureHandler(renderError)
+          .getApplicationBootstrap();
+      } catch (error) {
+        renderError(error);
+      }
+    }
+
+    loadApplication();
+  })();
+</script>

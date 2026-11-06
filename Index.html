@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BRUMAR · Gestión integral</title>
+    <?!= include_('Styles'); ?>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Ir al contenido</a>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-symbol" aria-hidden="true">B</span><div>BRUMAR<small>Gestión integral</small></div></div>
+        <p class="nav-label">ESPACIO DE TRABAJO</p>
+        <nav id="navigation" aria-label="Secciones del sistema"></nav>
+        <div class="sidebar-footer"><span class="status-dot" aria-hidden="true"></span>Proyecto en desarrollo<small id="version">Base inicial</small></div>
+      </aside>
+      <div class="workspace">
+        <header class="topbar"><span>Administración del comercio</span><span id="connection" class="connection" role="status">Conectando…</span></header>
+        <main id="contenido" tabindex="-1" aria-busy="true">
+          <p class="eyebrow">BRUMAR / INICIO</p>
+          <h1>Preparando tu espacio de trabajo</h1>
+          <p class="intro">Cargando la estructura inicial del sistema.</p>
+          <noscript>Activá JavaScript para utilizar esta interfaz.</noscript>
+        </main>
+        <footer class="page-footer">BRUMAR · Sistema de gestión y automatización</footer>
+      </div>
+    </div>
+    <?!= include_('JavaScript'); ?>
+  </body>
+</html>
